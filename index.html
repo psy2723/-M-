@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>JSON 병합기 - 깔끔버전</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="#">JSON 병합기</a>
+    </div>
+  </nav>
+
+  <main class="container py-4">
+    <h1 class="mb-4">📦 JSON 병합기</h1>
+    <p>각 섹터에서 원하는 JSON 파일을 선택하세요.</p>
+
+    <div id="selectors" class="mb-3"></div>
+
+    <button id="mergeBtn" class="btn btn-primary me-2">병합하기</button>
+    <button id="downloadBtn" class="btn btn-success">다운로드</button>
+
+    <h3 class="mt-4">병합 결과</h3>
+    <pre id="output" class="bg-white p-3 border rounded" style="height: 300px; overflow: auto;"></pre>
+  </main>
+
+  <script>
+    const NUM_SECTORS = 5;
+    const optionsPerSector = {
+      1: ["sector1-option1.json", "sector1-option2.json"],
+      2: ["sector2-option1.json", "sector2-option2.json"],
+      3: ["sector3-option1.json", "sector3-option2.json"],
+      4: ["sector4-option1.json", "sector4-option2.json"],
+      5: ["sector5-option1.json", "sector5-option2.json"],
+    };
+
+    const selectorsDiv = document.getElementById("selectors");
+    for (let i = 1; i <= NUM_SECTORS; i++) {
+      const div = document.createElement("div");
+      div.className = "mb-2";
+      const label = document.createElement("label");
+      label.textContent = `섹터 ${i}: `;
+      label.className = "form-label";
+      const select = document.createElement("select");
+      select.id = `sector${i}`;
+      select.className = "form-select";
+      optionsPerSector[i].forEach(opt => {
+        const option = document.createElement("option");
+        option.value = `jsons/${opt}`;
+        option.textContent = opt;
+        select.appendChild(option);
+      });
+      div.appendChild(label);
+      div.appendChild(select);
+      selectorsDiv.appendChild(div);
+    }
+
+    let mergedResult = [];
+
+    document.getElementById("mergeBtn").addEventListener("click", async () => {
+      mergedResult = [];
+      for (let i = 1; i <= NUM_SECTORS; i++) {
+        const path = document.getElementById(`sector${i}`).value;
+        try {
+          const res = await fetch(path);
+          const json = await res.json();
+          mergedResult.push(...json);
+        } catch {
+          alert(`${path} 파일을 불러올 수 없습니다.`);
+        }
+      }
+      document.getElementById("output").textContent = JSON.stringify(mergedResult, null, 2);
+    });
+
+    document.getElementById("downloadBtn").addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(mergedResult, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "merged.json";
+      a.click();
+    });
+  </script>
+</body>
+</html>
