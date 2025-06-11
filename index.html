@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JSON 병합기</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
+    select, button { margin: 5px 0; padding: 5px; font-size: 16px; }
+    pre { background: #eee; padding: 10px; overflow-x: auto; max-height: 300px; }
+  </style>
+</head>
+<body>
+  <h1>📦 JSON 병합기</h1>
+  <p>각 섹터에서 원하는 JSON 파일을 선택하세요.</p>
+  <div id="selectors"></div>
+  <button onclick="mergeJSON()">병합하기</button>
+  <button onclick="downloadJSON()">💾 다운로드</button>
+  <h3>📄 병합된 결과</h3>
+  <pre id="output"></pre>
+
+  <script>
+    const NUM_SECTORS = 5; // 필요에 따라 20까지 늘릴 수 있어요
+    const optionsPerSector = {
+      1: ["sector1-option1.json", "sector1-option2.json"],
+      2: ["sector2-option1.json", "sector2-option2.json"],
+      3: ["sector3-option1.json", "sector3-option2.json"],
+      4: ["sector4-option1.json", "sector4-option2.json"],
+      5: ["sector5-option1.json", "sector5-option2.json"],
+    };
+
+    const selectorsDiv = document.getElementById("selectors");
+    for (let i = 1; i <= NUM_SECTORS; i++) {
+      const select = document.createElement("select");
+      select.id = `sector${i}`;
+      const label = document.createElement("label");
+      label.textContent = `섹터 ${i}: `;
+      optionsPerSector[i].forEach(opt => {
+        const option = document.createElement("option");
+        option.value = `jsons/${opt}`;
+        option.textContent = opt;
+        select.appendChild(option);
+      });
+      selectorsDiv.appendChild(label);
+      selectorsDiv.appendChild(select);
+      selectorsDiv.appendChild(document.createElement("br"));
+    }
+
+    async function mergeJSON() {
+      const merged = [];
+      for (let i = 1; i <= NUM_SECTORS; i++) {
+        const path = document.getElementById(`sector${i}`).value;
+        try {
+          const res = await fetch(path);
+          const json = await res.json();
+          merged.push(...json); // 파일마다 배열 형식이라고 가정
+        } catch (err) {
+          alert(`⚠️ 오류: ${path} 파일을 불러올 수 없습니다.`);
+        }
+      }
+      document.getElementById("output").textContent = JSON.stringify(merged, null, 2);
+      window.mergedResult = merged;
+    }
+
+    function downloadJSON() {
+      const blob = new Blob([JSON.stringify(window.mergedResult || [], null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "merged.json";
+      a.click();
+    }
+  </script>
+</body>
+</html>
